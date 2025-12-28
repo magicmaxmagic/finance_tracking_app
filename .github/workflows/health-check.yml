@@ -1,0 +1,35 @@
+name: Scheduled Health Check
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check API health
+      if: secrets.DEPLOY_HOST != ''
+      run: |
+        curl -f http://${{ secrets.DEPLOY_HOST }}:8000/health || exit 1
+
+    - name: Check frontend
+      if: secrets.DEPLOY_HOST != ''
+      run: |
+        curl -f http://${{ secrets.DEPLOY_HOST }}:3000 || exit 1
+
+    - name: Send notification on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '⚠️ Health check failed - Production services are not responding'
+          })

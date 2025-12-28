@@ -1,0 +1,87 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/Dockerfile'
+      - 'frontend/Dockerfile'
+      - 'docker-compose.yml'
+      - '.github/workflows/docker-build.yml'
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        push: false
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: finance_tracking_app-backend:latest
+
+    - name: Build frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: false
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: finance_tracking_app-frontend:latest
+
+    - name: Validate docker-compose
+      run: docker-compose config
+
+  push-images:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      if: secrets.DOCKERHUB_USERNAME != ''
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push backend
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        push: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/finance-tracking-backend:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/finance-tracking-backend:${{ github.sha }}
+
+    - name: Build and push frontend
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/finance-tracking-frontend:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/finance-tracking-frontend:${{ github.sha }}
