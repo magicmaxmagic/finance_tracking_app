@@ -19,6 +19,13 @@ class CategoryExpense(BaseModel):
     percentage: float
 
 
+class LabelExpense(BaseModel):
+    """Schema for label breakdown."""
+    label: str
+    amount: Decimal
+    percentage: float
+
+
 class MonthlyExpense(BaseModel):
     """Schema for monthly expenses."""
     month: str
@@ -32,3 +39,4 @@ class DashboardData(BaseModel):
     monthly_expenses: List[MonthlyExpense]
     recent_transactions: List[Dict]
     onboarding: List[Dict]
+    expenses_by_label: List[LabelExpense]

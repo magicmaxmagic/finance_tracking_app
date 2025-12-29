@@ -35,7 +35,9 @@ class DashboardService:
         
         # Get expenses by category
         expenses_by_category = await self._get_expenses_by_category(user_id, today.year, today.month)
-        
+
+        expenses_by_label = await self._get_expenses_by_label(user_id, today.year, today.month)
+
         # Get monthly expenses for last 6 months
         monthly_expenses_history = await self._get_monthly_expenses_history(user_id)
         
@@ -50,6 +52,7 @@ class DashboardService:
             monthly_expenses=monthly_expenses_history,
             recent_transactions=recent_transactions,
             onboarding=onboarding,
+            expenses_by_label=expenses_by_label,
         )
     
     async def _get_monthly_expenses(self, user_id: int, year: int, month: int) -> Decimal:
@@ -115,6 +118,40 @@ class DashboardService:
                     )
                 )
         
+        return sorted(expenses, key=lambda x: x.amount, reverse=True)
+
+    async def _get_expenses_by_label(self, user_id: int, year: int, month: int):
+        """Get expenses grouped by labels (tags)."""
+        result = await self.session.execute(
+            select(Transaction.tags, func.sum(Transaction.amount).label('amount')).where(
+                Transaction.user_id == user_id,
+                Transaction.tags.isnot(None),
+                Transaction.tags != "",
+                extract('year', Transaction.transaction_date) == year,
+                extract('month', Transaction.transaction_date) == month,
+                Transaction.amount < 0,
+            ).group_by(Transaction.tags)
+        )
+
+        rows = result.all()
+        label_totals = {}
+        for tags, amount in rows:
+            if not tags or not amount:
+                continue
+            for label in [t.strip() for t in tags.split(",") if t.strip()]:
+                label_totals[label] = label_totals.get(label, 0) + abs(float(amount))
+
+        total = sum(label_totals.values())
+        from app.schemas.dashboard import LabelExpense
+
+        expenses = [
+            LabelExpense(
+                label=label,
+                amount=Decimal(str(amount)),
+                percentage=(amount / total * 100) if total > 0 else 0,
+            )
+            for label, amount in label_totals.items()
+        ]
         return sorted(expenses, key=lambda x: x.amount, reverse=True)
     
     async def _get_monthly_expenses_history(self, user_id: int, months: int = 6):

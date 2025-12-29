@@ -133,6 +133,13 @@ async def import_csv(
             "Amount": "amount",
             "Description": "description",
             "Category": "category_id",
+            "Tags": "tags",
+            "Labels": "tags",
+            "Notes": "notes",
+            "Type": "transaction_type",
+            "Transaction Type": "transaction_type",
+            "Debit": "debit_amount",
+            "Credit": "credit_amount",
         }
         
         from app.services.job import JobService
