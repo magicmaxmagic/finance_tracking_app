@@ -1,7 +1,7 @@
 """User service for user-related business logic."""
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.user import UserRepository
-from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
+from app.core.security import hash_password, verify_password
 from app.schemas.user import UserCreate, UserResponse
 
 
@@ -27,14 +27,8 @@ class UserService:
             full_name=user_data.full_name
         )
         
-        # Create tokens
-        access_token = create_access_token({"sub": str(user.id)})
-        refresh_token = create_refresh_token({"sub": str(user.id)})
-        
         return {
             "user": UserResponse.from_orm(user),
-            "access_token": access_token,
-            "refresh_token": refresh_token,
         }
     
     async def login(self, email: str, password: str) -> dict:
@@ -49,14 +43,8 @@ class UserService:
         if not user.is_active:
             raise ValueError("User is inactive")
         
-        # Create tokens
-        access_token = create_access_token({"sub": str(user.id)})
-        refresh_token = create_refresh_token({"sub": str(user.id)})
-        
         return {
             "user": UserResponse.from_orm(user),
-            "access_token": access_token,
-            "refresh_token": refresh_token,
         }
     
     async def get_user(self, user_id: int) -> UserResponse:

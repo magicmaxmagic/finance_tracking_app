@@ -60,8 +60,8 @@ async def test_register(test_db):
         assert response.status_code == 200
         data = response.json()
         assert data["user"]["email"] == "test@example.com"
-        assert "access_token" in data
-        assert "refresh_token" in data
+        assert response.cookies.get("access_token") is not None
+        assert response.cookies.get("refresh_token") is not None
 
 
 @pytest.mark.asyncio
@@ -88,7 +88,7 @@ async def test_login(test_db):
         assert response.status_code == 200
         data = response.json()
         assert data["user"]["email"] == "test@example.com"
-        assert "access_token" in data
+        assert response.cookies.get("access_token") is not None
 
 
 @pytest.mark.asyncio
@@ -103,13 +103,8 @@ async def test_get_current_user(test_db):
                 "password": "testpass123",
             },
         )
-        token = register_response.json()["access_token"]
-        
-        # Get current user
-        response = await client.get(
-            "/api/users/me",
-            headers={"Authorization": f"Bearer {token}"},
-        )
+        # Get current user using cookies
+        response = await client.get("/api/users/me")
         assert response.status_code == 200
         data = response.json()
         assert data["email"] == "test@example.com"

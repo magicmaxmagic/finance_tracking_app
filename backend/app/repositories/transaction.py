@@ -72,8 +72,11 @@ class TransactionRepository:
                 )
             )
         
-        count_result = await self.session.execute(count_query)
-        total = len(count_result.scalars().all())
+        from sqlalchemy import func
+        count_result = await self.session.execute(
+            count_query.with_only_columns(func.count(Transaction.id)).order_by(None)
+        )
+        total = int(count_result.scalar() or 0)
         
         # Get paginated results
         query = query.order_by(desc(Transaction.transaction_date)).offset(skip).limit(limit)

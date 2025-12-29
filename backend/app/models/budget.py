@@ -1,5 +1,5 @@
 """Budget model for monthly budget tracking."""
-from sqlalchemy import Column, Numeric, DateTime, Integer, ForeignKey, Date, Index
+from sqlalchemy import Column, Numeric, DateTime, Integer, ForeignKey, Date, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime, date
 from app.db.base import Base
@@ -25,6 +25,7 @@ class Budget(Base):
     __table_args__ = (
         Index('idx_user_month', 'user_id', 'month'),
         Index('idx_category_month', 'category_id', 'month'),
+        UniqueConstraint('user_id', 'category_id', 'month', name='uq_budget_user_category_month'),
     )
     
     # Relationships

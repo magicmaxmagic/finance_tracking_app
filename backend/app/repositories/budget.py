@@ -1,6 +1,7 @@
 """Budget repository for database operations."""
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from datetime import date
 from app.models.budget import Budget
 
@@ -31,12 +32,23 @@ class BudgetRepository:
     async def get_by_month(self, user_id: int, month: date) -> list[Budget]:
         """Get budgets for a specific month."""
         result = await self.session.execute(
-            select(Budget).where(
+            select(Budget).options(selectinload(Budget.category)).where(
                 Budget.user_id == user_id,
                 Budget.month == month
             ).order_by(Budget.created_at)
         )
         return list(result.scalars().all())
+
+    async def get_by_category_and_month(self, user_id: int, category_id: int, month: date) -> Budget | None:
+        """Get budget for a category in a month."""
+        result = await self.session.execute(
+            select(Budget).options(selectinload(Budget.category)).where(
+                Budget.user_id == user_id,
+                Budget.category_id == category_id,
+                Budget.month == month
+            )
+        )
+        return result.scalar_one_or_none()
     
     async def get_or_create(
         self, user_id: int, category_id: int, month: date, amount: float
