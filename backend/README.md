@@ -1,6 +1,6 @@
 # Finance Tracking App - Backend
 
-Backend API for personal finance management application.
+Backend API for finance analysis and prediction toward target net worth.
 
 ## Setup
 
@@ -53,4 +53,7 @@ See `.env.example` for all available variables.
 ### Important keys:
 - `DATABASE_URL` - PostgreSQL connection string
 - `SECRET_KEY` - JWT secret (min 32 characters)
+- `REFRESH_SECRET_KEY` - Refresh token secret (min 32 characters)
 - `DEBUG` - Debug mode (True/False)
+- `REDIS_URL` - Redis connection for rate limiting/blacklist
+- `PROMETHEUS_METRICS_ENABLED` - Enable `/metrics` endpoint

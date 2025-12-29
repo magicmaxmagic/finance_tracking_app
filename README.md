@@ -1,6 +1,6 @@
 # Finance Tracking App - SaaS
 
-A complete personal finance management application designed with a multi-user architecture ready for production.
+A finance analysis and prediction platform that models optimal paths to reach a target net worth, built as a multi-user SaaS.
 
 ## Quick Start
 
@@ -32,6 +32,9 @@ make help
 
 ### Authentication
 - Register / Login with JWT (access + refresh tokens)
+- HttpOnly cookies with refresh rotation
+- Password reset + email verification flows
+- Audit logs for auth events
 - Secure password hashing with bcrypt
 - Authentication middleware
 
@@ -88,6 +91,8 @@ make help
 ### Infrastructure
 - **Docker** & **Docker Compose**
 - **PostgreSQL 15**
+- **Redis** (rate limiting + token blacklist)
+- **Prometheus** metrics endpoint `/metrics`
 
 ---
 

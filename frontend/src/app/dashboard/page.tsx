@@ -10,6 +10,7 @@ import { DashboardData, Transaction } from '@/types'
 export default function DashboardPage() {
   const { user, logout } = useAuth()
   const { data: dashboard, loading } = useAPI<DashboardData>('/api/dashboard')
+  const { data: notifications } = useAPI<any[]>('/api/notifications')
 
   if (!user) {
     return <div>Loading...</div>
@@ -60,6 +61,28 @@ export default function DashboardPage() {
           <div>Loading dashboard...</div>
         ) : dashboard ? (
           <>
+            {/* Onboarding */}
+            {dashboard.onboarding?.some(step => !step.completed) && (
+              <div className="bg-white p-6 rounded-lg shadow mb-8">
+                <h2 className="text-xl font-bold mb-4">Quick start</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {dashboard.onboarding.map(step => (
+                    <div
+                      key={step.key}
+                      className={`flex items-center justify-between border rounded p-3 ${
+                        step.completed ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
+                      }`}
+                    >
+                      <span className="text-sm font-medium">{step.label}</span>
+                      <span className="text-xs font-bold">
+                        {step.completed ? 'Done' : 'Next'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="bg-white p-6 rounded-lg shadow">
@@ -84,7 +107,7 @@ export default function DashboardPage() {
 
             {/* Recent Transactions */}
             <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-bold mb-4">Recent Transactions</h2>
+              <h2 className="text-xl font-bold mb-4">Recent transactions</h2>
               <div className="space-y-2">
                 {dashboard?.recent_transactions?.slice(0, 5).map((tx: Transaction) => (
                   <div key={tx.id} className="flex justify-between items-center py-2 border-b">
@@ -94,6 +117,24 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
+
+            {/* Notifications */}
+            {notifications && notifications.length > 0 && (
+              <div className="bg-white p-6 rounded-lg shadow mt-6">
+                <h2 className="text-xl font-bold mb-4">Notifications</h2>
+                <div className="space-y-2">
+                  {notifications.slice(0, 5).map((note) => (
+                    <div key={note.id} className="flex items-start justify-between border-b pb-2">
+                      <div>
+                        <p className="font-semibold">{note.title}</p>
+                        <p className="text-sm text-gray-600">{note.message}</p>
+                      </div>
+                      <span className="text-xs text-gray-500">{note.notification_type}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         ) : null}
       </main>

@@ -4,28 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.base import get_db
 from app.schemas.user import UserResponse, UserUpdate
 from app.services.user import UserService
-from app.core.security import decode_token
-from fastapi import Header
+from app.core.deps import get_current_user_id
 
 router = APIRouter(prefix="/api/users", tags=["users"])
-
-
-def get_current_user_id(authorization: str = Header(None)) -> int:
-    """Extract user ID from JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    
-    token = authorization[7:]
-    payload = decode_token(token)
-    
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
-    
-    return int(user_id)
 
 
 @router.get("/me", response_model=UserResponse)

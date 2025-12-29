@@ -16,6 +16,11 @@ from app.models.category import Category, CategoryRule  # noqa
 from app.models.transaction import Transaction  # noqa
 from app.models.budget import Budget  # noqa
 from app.models.net_worth_snapshot import NetWorthSnapshot  # noqa
+from app.models.auth import RefreshToken, PasswordResetToken, EmailVerificationToken  # noqa
+from app.models.audit_log import AuditLog  # noqa
+from app.models.notification import Notification  # noqa
+from app.models.fx_rate import FXRate  # noqa
+from app.models.job import Job  # noqa
 
 # this is the Alembic Config object
 config = context.config
@@ -42,9 +47,6 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
-    # Get the DATABASE_URL from environment variable or use the one from config
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     # Get the DATABASE_URL from environment variable

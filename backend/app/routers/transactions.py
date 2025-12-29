@@ -1,35 +1,17 @@
 """Transaction router for transaction management endpoints."""
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.base import get_db
 from app.schemas.transaction import (
     TransactionCreate, TransactionUpdate, TransactionResponse,
-    TransactionListResponse, CSVImportRequest
+    TransactionListResponse
 )
 from app.services.transaction import TransactionService
-from app.core.security import decode_token
-from fastapi import Header
+from app.core.deps import get_current_user_id
 from datetime import datetime
 
 router = APIRouter(prefix="/api/transactions", tags=["transactions"])
-
-
-def get_current_user_id(authorization: str = Header(None)) -> int:
-    """Extract user ID from JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    
-    token = authorization[7:]
-    payload = decode_token(token)
-    
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    user_id = payload.get("sub")
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
-    
-    return int(user_id)
 
 
 @router.get("", response_model=TransactionListResponse)
@@ -151,17 +133,33 @@ async def import_csv(
             "Amount": "amount",
             "Description": "description",
             "Category": "category_id",
+            "Tags": "tags",
+            "Labels": "tags",
+            "Notes": "notes",
+            "Type": "transaction_type",
+            "Transaction Type": "transaction_type",
+            "Debit": "debit_amount",
+            "Credit": "credit_amount",
         }
         
-        result = await service.import_from_csv(
+        from app.services.job import JobService
+        job_service = JobService(session)
+        job = await job_service.create_job(
             user_id=user_id,
-            account_id=account_id,
-            csv_content=csv_content,
-            column_mapping=column_mapping,
-            skip_duplicates=skip_duplicates,
+            job_type="csv_import",
+            payload={"account_id": account_id, "skip_duplicates": skip_duplicates},
         )
-        
-        return result
+        asyncio.create_task(
+            TransactionService.run_csv_import_job(
+                job.id,
+                user_id,
+                account_id,
+                csv_content,
+                column_mapping,
+                skip_duplicates,
+            )
+        )
+        return {"job_id": job.id, "status": "queued"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

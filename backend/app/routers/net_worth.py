@@ -3,28 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.base import get_db
 from app.services.net_worth import NetWorthService
-from app.core.security import decode_token
-from fastapi import Header
+from app.core.deps import get_current_user_id
 
 router = APIRouter(prefix="/api/net-worth", tags=["net-worth"])
-
-
-def get_current_user_id(authorization: str = Header(None)) -> int:
-    """Extract user ID from JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    
-    token = authorization[7:]
-    payload = decode_token(token)
-    
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    sub = payload.get("sub")
-    if not sub:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    return int(sub)
 
 
 @router.get("/summary")

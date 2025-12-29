@@ -2,7 +2,9 @@
 export interface User {
   id: number
   email: string
-  name: string
+  full_name?: string
+  is_active: boolean
+  is_email_verified: boolean
 }
 
 // Dashboard types
@@ -16,8 +18,12 @@ export interface Transaction {
   id: number
   description: string
   amount: number
-  category?: string
-  date?: string
+  currency: string
+  transaction_date: string
+  category_id?: number
+  account_id: number
+  notes?: string | null
+  tags?: string | null
 }
 
 export interface CategoryExpense {
@@ -37,6 +43,7 @@ export interface DashboardData {
   expenses_by_category: CategoryExpense[]
   monthly_expenses: MonthlyExpense[]
   recent_transactions: Transaction[]
+  onboarding: { key: string; label: string; completed: boolean }[]
 }
 
 // Account types
@@ -51,16 +58,22 @@ export interface Account {
 // Budget types
 export interface Budget {
   id: number
-  category: string
+  category_id: number
+  category_name: string
   amount: number
   spent: number
-  period: string
+  remaining: number
+  percentage_used: number
+  month: string
 }
 
 // Category types
 export interface Category {
   id: number
   name: string
+  color: string
+  icon?: string
+  is_income: boolean
   description?: string
 }
 

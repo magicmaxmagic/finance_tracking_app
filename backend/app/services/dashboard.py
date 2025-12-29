@@ -7,6 +7,8 @@ from app.models.transaction import Transaction
 from app.models.account import Account
 from app.schemas.dashboard import DashboardKPI, DashboardData
 from app.services.net_worth import NetWorthService
+from app.models.category import Category
+from app.models.budget import Budget
 
 
 class DashboardService:
@@ -33,18 +35,24 @@ class DashboardService:
         
         # Get expenses by category
         expenses_by_category = await self._get_expenses_by_category(user_id, today.year, today.month)
-        
+
+        expenses_by_label = await self._get_expenses_by_label(user_id, today.year, today.month)
+
         # Get monthly expenses for last 6 months
         monthly_expenses_history = await self._get_monthly_expenses_history(user_id)
         
         # Get recent transactions
         recent_transactions = await self._get_recent_transactions(user_id, limit=10)
+
+        onboarding = await self._get_onboarding_steps(user_id)
         
         return DashboardData(
             kpi=kpi,
             expenses_by_category=expenses_by_category,
             monthly_expenses=monthly_expenses_history,
             recent_transactions=recent_transactions,
+            onboarding=onboarding,
+            expenses_by_label=expenses_by_label,
         )
     
     async def _get_monthly_expenses(self, user_id: int, year: int, month: int) -> Decimal:
@@ -77,8 +85,6 @@ class DashboardService:
     
     async def _get_expenses_by_category(self, user_id: int, year: int, month: int):
         """Get expenses grouped by category."""
-        from app.models.category import Category
-        
         result = await self.session.execute(
             select(
                 Category.id,
@@ -112,6 +118,40 @@ class DashboardService:
                     )
                 )
         
+        return sorted(expenses, key=lambda x: x.amount, reverse=True)
+
+    async def _get_expenses_by_label(self, user_id: int, year: int, month: int):
+        """Get expenses grouped by labels (tags)."""
+        result = await self.session.execute(
+            select(Transaction.tags, func.sum(Transaction.amount).label('amount')).where(
+                Transaction.user_id == user_id,
+                Transaction.tags.isnot(None),
+                Transaction.tags != "",
+                extract('year', Transaction.transaction_date) == year,
+                extract('month', Transaction.transaction_date) == month,
+                Transaction.amount < 0,
+            ).group_by(Transaction.tags)
+        )
+
+        rows = result.all()
+        label_totals = {}
+        for tags, amount in rows:
+            if not tags or not amount:
+                continue
+            for label in [t.strip() for t in tags.split(",") if t.strip()]:
+                label_totals[label] = label_totals.get(label, 0) + abs(float(amount))
+
+        total = sum(label_totals.values())
+        from app.schemas.dashboard import LabelExpense
+
+        expenses = [
+            LabelExpense(
+                label=label,
+                amount=Decimal(str(amount)),
+                percentage=(amount / total * 100) if total > 0 else 0,
+            )
+            for label, amount in label_totals.items()
+        ]
         return sorted(expenses, key=lambda x: x.amount, reverse=True)
     
     async def _get_monthly_expenses_history(self, user_id: int, months: int = 6):
@@ -154,4 +194,26 @@ class DashboardService:
                 "category_id": t.category_id,
             }
             for t in transactions
+        ]
+
+    async def _get_onboarding_steps(self, user_id: int) -> list[dict]:
+        """Compute onboarding progress."""
+        account_count = await self.session.scalar(
+            select(func.count(Account.id)).where(Account.user_id == user_id)
+        )
+        category_count = await self.session.scalar(
+            select(func.count(Category.id)).where(Category.user_id == user_id)
+        )
+        transaction_count = await self.session.scalar(
+            select(func.count(Transaction.id)).where(Transaction.user_id == user_id)
+        )
+        budget_count = await self.session.scalar(
+            select(func.count(Budget.id)).where(Budget.user_id == user_id)
+        )
+
+        return [
+            {"key": "add_account", "label": "Add an account", "completed": (account_count or 0) > 0},
+            {"key": "add_category", "label": "Create categories", "completed": (category_count or 0) > 0},
+            {"key": "add_transaction", "label": "Add a transaction", "completed": (transaction_count or 0) > 0},
+            {"key": "set_budget", "label": "Set a budget", "completed": (budget_count or 0) > 0},
         ]

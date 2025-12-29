@@ -30,6 +30,7 @@ class UserResponse(BaseModel):
     email: str
     full_name: Optional[str]
     is_active: bool
+    is_email_verified: bool
     created_at: datetime
     
     class Config:

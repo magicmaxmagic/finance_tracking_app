@@ -2,15 +2,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import apiClient from '@/lib/api'
-import { setTokens, clearTokens, isAuthenticated as checkAuth } from '@/lib/auth'
 
 interface User {
   id: number
   email: string
   full_name?: string
   is_active: boolean
+  is_email_verified: boolean
   created_at: string
 }
 
@@ -19,15 +19,29 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const pathname = usePathname()
+
+  const parseError = (err: unknown, fallback: string) => {
+    const detail = (err as any)?.response?.data?.detail
+    if (Array.isArray(detail)) {
+      return detail
+        .map((item) => item?.msg || item?.message)
+        .filter(Boolean)
+        .join(', ') || fallback
+    }
+    if (typeof detail === 'string') {
+      return detail
+    }
+    return fallback
+  }
 
   useEffect(() => {
-    // Check if user is already authenticated
-    if (checkAuth()) {
-      fetchCurrentUser()
-    } else {
+    if (pathname === '/login' || pathname === '/register') {
       setLoading(false)
+      return
     }
-  }, [])
+    fetchCurrentUser()
+  }, [pathname])
 
   const fetchCurrentUser = async () => {
     try {
@@ -36,7 +50,7 @@ export const useAuth = () => {
       setError(null)
     } catch (err) {
       setUser(null)
-      setError('Failed to fetch user')
+      setError(null)
     } finally {
       setLoading(false)
     }
@@ -50,11 +64,10 @@ export const useAuth = () => {
         email,
         password,
       })
-      setTokens(response.data.access_token, response.data.refresh_token)
       setUser(response.data.user)
       router.push('/dashboard')
     } catch (err) {
-      setError('Invalid credentials')
+      setError(parseError(err, 'Invalid credentials'))
     } finally {
       setLoading(false)
     }
@@ -69,18 +82,17 @@ export const useAuth = () => {
         password,
         full_name: fullName,
       })
-      setTokens(response.data.access_token, response.data.refresh_token)
       setUser(response.data.user)
       router.push('/dashboard')
     } catch (err) {
-      setError('Registration failed')
+      setError(parseError(err, 'Registration failed'))
     } finally {
       setLoading(false)
     }
   }
 
   const logout = () => {
-    clearTokens()
+    apiClient.post('/api/auth/logout').catch(() => null)
     setUser(null)
     router.push('/login')
   }
