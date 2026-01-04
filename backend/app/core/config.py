@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     COOKIE_SAMESITE: str = "lax"
     COOKIE_DOMAIN: Optional[str] = None
 
+    # Encryption
+    ENCRYPTION_KEY: Optional[str] = None
+
     # Server
     HOST: str = "0.0.0.0"
     PORT: int = 8000
@@ -32,6 +35,18 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+    # Security headers / hosts
+    SECURITY_HEADERS_ENABLED: bool = True
+    ENFORCE_HTTPS: bool = False
+    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
+    HSTS_MAX_AGE: int = 31536000
+    HSTS_INCLUDE_SUBDOMAINS: bool = True
+    HSTS_PRELOAD: bool = False
+    CONTENT_SECURITY_POLICY: Optional[str] = None
+
+    # Upload limits
+    MAX_ICS_UPLOAD_BYTES: int = 5_000_000
 
     # Rate limiting
     RATE_LIMIT_ENABLED: bool = True
@@ -51,6 +66,20 @@ class Settings(BaseSettings):
 
     # Metrics
     PROMETHEUS_METRICS_ENABLED: bool = True
+
+    # Stripe billing
+    STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
+    STRIPE_PRICE_ID_PRO_MONTHLY: Optional[str] = None
+    STRIPE_PRICE_ID_PRO_ANNUAL: Optional[str] = None
+    STRIPE_SUCCESS_URL: str = "http://localhost:3000/pricing?checkout=success"
+    STRIPE_CANCEL_URL: str = "http://localhost:3000/pricing?checkout=cancel"
+    STRIPE_PORTAL_RETURN_URL: str = "http://localhost:3000/settings"
+
+    # Google Calendar OAuth
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: Optional[str] = None
 
     class Config:
         env_file = ".env"

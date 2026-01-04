@@ -40,7 +40,14 @@ class CategoryRule(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="CASCADE"), nullable=False)
-    rule_type = Column(SQLEnum(RuleType), nullable=False)
+    rule_type = Column(
+        SQLEnum(
+            RuleType,
+            name="ruletype",
+            values_callable=lambda enum: [item.value for item in enum],
+        ),
+        nullable=False,
+    )
     pattern = Column(String(500), nullable=False)  # Contains string, regex pattern, or exact match
     priority = Column(Integer, default=0)  # Higher priority rules are applied first
     is_active = Column(Boolean, default=True)

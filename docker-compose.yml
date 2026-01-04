@@ -19,6 +19,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://finance_user:finance_password@postgres:5432/finance_db
       SECRET_KEY: your-super-secret-key-change-in-production-min-32-chars

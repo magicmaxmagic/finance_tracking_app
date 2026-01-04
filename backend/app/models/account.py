@@ -24,7 +24,14 @@ class Account(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
-    account_type = Column(SQLEnum(AccountType), nullable=False)
+    account_type = Column(
+        SQLEnum(
+            AccountType,
+            name="accounttype",
+            values_callable=lambda enum: [item.value for item in enum],
+        ),
+        nullable=False,
+    )
     currency = Column(String(3), default="USD", nullable=False)
     balance = Column(Numeric(15, 2), default=0, nullable=False)
     description = Column(String(500), nullable=True)

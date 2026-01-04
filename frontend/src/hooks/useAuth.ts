@@ -18,6 +18,7 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -48,11 +49,36 @@ export const useAuth = () => {
       const response = await apiClient.get('/api/users/me')
       setUser(response.data)
       setError(null)
+      await fetchOnboardingStatus()
     } catch (err) {
       setUser(null)
       setError(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const resolveDefaultRoute = async () => {
+    try {
+      const response = await apiClient.get('/api/settings')
+      const view = response.data?.default_view
+      if (view === 'workspace') return '/workspace'
+      if (view === 'transactions') return '/transactions'
+      return '/dashboard'
+    } catch {
+      return '/dashboard'
+    }
+  }
+
+  const fetchOnboardingStatus = async () => {
+    try {
+      const response = await apiClient.get('/api/onboarding/status')
+      const completed = response.data?.is_completed ?? false
+      setOnboardingComplete(completed)
+      return completed
+    } catch (err) {
+      setOnboardingComplete(null)
+      return null
     }
   }
 
@@ -65,7 +91,9 @@ export const useAuth = () => {
         password,
       })
       setUser(response.data.user)
-      router.push('/dashboard')
+      await fetchOnboardingStatus()
+      const destination = await resolveDefaultRoute()
+      router.push(destination)
     } catch (err) {
       setError(parseError(err, 'Invalid credentials'))
     } finally {
@@ -83,7 +111,9 @@ export const useAuth = () => {
         full_name: fullName,
       })
       setUser(response.data.user)
-      router.push('/dashboard')
+      await fetchOnboardingStatus()
+      const destination = await resolveDefaultRoute()
+      router.push(destination)
     } catch (err) {
       setError(parseError(err, 'Registration failed'))
     } finally {
@@ -101,6 +131,8 @@ export const useAuth = () => {
     user,
     loading,
     error,
+    onboardingComplete,
+    refreshOnboardingStatus: fetchOnboardingStatus,
     login,
     register,
     logout,

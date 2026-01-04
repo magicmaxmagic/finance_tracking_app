@@ -1,11 +1,12 @@
 """Account schemas for request/response validation."""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
+from enum import Enum
 
 
-class AccountTypeEnum(str):
+class AccountTypeEnum(str, Enum):
     """Account type enum."""
     CASH = "cash"
     SAVINGS = "savings"
@@ -15,14 +16,36 @@ class AccountTypeEnum(str):
     DEBT = "debt"
     OTHER = "other"
 
+    @classmethod
+    def normalize(cls, value: str) -> str:
+        """Normalize user input to a supported account type."""
+        cleaned = value.strip().lower()
+        synonyms = {
+            "chequing": "checking",
+            "current": "checking",
+            "current account": "checking",
+            "cc": "credit",
+            "credit card": "credit",
+        }
+        return synonyms.get(cleaned, cleaned)
+
 
 class AccountCreate(BaseModel):
     """Schema for account creation."""
     name: str = Field(..., max_length=255)
-    account_type: str
+    account_type: AccountTypeEnum
     currency: str = "USD"
     balance: Decimal = Decimal("0.00")
     description: Optional[str] = None
+
+    @field_validator("account_type", mode="before")
+    @classmethod
+    def normalize_account_type(cls, value):
+        if isinstance(value, AccountTypeEnum):
+            return value
+        if not isinstance(value, str):
+            raise ValueError("account_type must be a string")
+        return AccountTypeEnum.normalize(value)
 
 
 class AccountUpdate(BaseModel):

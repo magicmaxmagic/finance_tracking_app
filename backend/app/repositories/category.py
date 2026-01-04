@@ -1,6 +1,6 @@
 """Category repository for database operations."""
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.category import Category, CategoryRule
 
 
@@ -26,6 +26,16 @@ class CategoryRepository:
             select(Category).where(Category.user_id == user_id).order_by(Category.created_at)
         )
         return list(result.scalars().all())
+
+    async def get_by_name(self, user_id: int, name: str) -> Category | None:
+        """Get category by name (case-insensitive)."""
+        result = await self.session.execute(
+            select(Category).where(
+                Category.user_id == user_id,
+                func.lower(Category.name) == name.lower(),
+            )
+        )
+        return result.scalar_one_or_none()
     
     async def create(self, user_id: int, **kwargs) -> Category:
         """Create a new category."""

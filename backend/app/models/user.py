@@ -24,3 +24,43 @@ class User(Base):
     categories = relationship("Category", back_populates="user", cascade="all, delete-orphan")
     budgets = relationship("Budget", back_populates="user", cascade="all, delete-orphan")
     net_worth_snapshots = relationship("NetWorthSnapshot", back_populates="user", cascade="all, delete-orphan")
+    financial_goals = relationship("FinancialGoal", back_populates="user", cascade="all, delete-orphan")
+    assumption_versions = relationship("AssumptionVersion", back_populates="user", cascade="all, delete-orphan")
+    onboarding_profile = relationship(
+        "OnboardingProfile",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    settings = relationship(
+        "UserSettings",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    subscription = relationship(
+        "UserSubscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    investment_assets = relationship(
+        "InvestmentAsset",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    schedule_blocks = relationship(
+        "ScheduleBlock",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    calendar_connections = relationship(
+        "CalendarConnection",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    external_calendar_events = relationship(
+        "ExternalCalendarEvent",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )

@@ -39,11 +39,11 @@ export default function RegisterPage() {
         <div className="auth-shell rounded-3xl p-8 lg:p-10 order-2 lg:order-1">
           <div className="mb-6">
             <h2 className="text-2xl font-bold">Create account</h2>
-            <p className="text-gray-600 mt-2">Get started in under two minutes.</p>
+            <p className="text-gray-600 mt-2">Set up your wealth workspace in minutes.</p>
           </div>
 
           {(error || localError) && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">
+            <div className="surface p-4 text-red-700 border border-red-200 bg-red-50/70 mb-4">
               {localError || error}
             </div>
           )}
@@ -56,7 +56,7 @@ export default function RegisterPage() {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white"
+                className="input-field"
                 placeholder="Maxence Legendre"
               />
             </div>
@@ -68,7 +68,7 @@ export default function RegisterPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white"
+                className="input-field"
                 required
               />
             </div>
@@ -81,7 +81,7 @@ export default function RegisterPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white pr-12"
+                  className="input-field pr-12"
                   minLength={8}
                   required
                 />
@@ -101,7 +101,7 @@ export default function RegisterPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white"
+                className="input-field"
                 minLength={8}
                 required
               />
@@ -111,7 +111,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white font-semibold py-3 px-4 rounded-xl hover:bg-gray-900 transition disabled:opacity-50"
+              className="btn-primary w-full disabled:opacity-50"
             >
               {loading ? 'Creating...' : 'Create my account'}
             </button>
@@ -119,34 +119,34 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-sm text-gray-600">
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-600 font-semibold hover:underline">
+            <Link href="/login" className="text-emerald-600 font-semibold hover:underline">
               Sign in
             </Link>
           </div>
         </div>
 
         <div className="order-1 lg:order-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black text-white text-xs uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-white text-xs uppercase tracking-widest">
             Onboarding
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mt-6 leading-tight">
-            Build a clear map of your financial future.
+            Build a plan that adapts as your wealth grows.
           </h1>
           <p className="text-gray-600 mt-4 text-lg">
-            Centralize expenses, income, and budgets to make better decisions every month.
+            Centralize accounts, budgets, and forecasts to steer every financial move.
           </p>
           <ul className="mt-8 space-y-3 text-sm text-gray-600">
             <li className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-blue-600" />
-              Fast transaction entry
-            </li>
-            <li className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-600" />
-              Income and expense tracking
+              Fast transaction entry
             </li>
             <li className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-amber-500" />
               Smart budget alerts
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-blue-600" />
+              Long-term forecasts
             </li>
           </ul>
         </div>

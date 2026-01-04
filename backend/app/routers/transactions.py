@@ -14,6 +14,13 @@ from datetime import datetime
 router = APIRouter(prefix="/api/transactions", tags=["transactions"])
 
 
+def _decode_csv(content: bytes) -> str:
+    try:
+        return content.decode("utf-8")
+    except UnicodeDecodeError:
+        return content.decode("latin-1")
+
+
 @router.get("", response_model=TransactionListResponse)
 async def get_transactions(
     skip: int = Query(0, ge=0),
@@ -125,29 +132,29 @@ async def import_csv(
     try:
         # Read CSV content
         content = await file.read()
-        csv_content = content.decode('utf-8')
-        
-        # Simple mapping: try to detect standard column names
-        column_mapping = {
-            "Date": "transaction_date",
-            "Amount": "amount",
-            "Description": "description",
-            "Category": "category_id",
-            "Tags": "tags",
-            "Labels": "tags",
-            "Notes": "notes",
-            "Type": "transaction_type",
-            "Transaction Type": "transaction_type",
-            "Debit": "debit_amount",
-            "Credit": "credit_amount",
-        }
+        csv_content = _decode_csv(content)
+        column_mapping, unmapped = service.detect_column_mapping(csv_content)
+
+        has_amount = any(
+            field in {"amount", "debit_amount", "credit_amount"} for field in column_mapping.values()
+        )
+        has_date = "transaction_date" in column_mapping.values()
+        if not has_amount or not has_date:
+            raise ValueError(
+                "CSV columns not recognized. "
+                "Ensure you have date and amount columns (e.g., Date, Amount, Debit/Credit)."
+            )
         
         from app.services.job import JobService
         job_service = JobService(session)
         job = await job_service.create_job(
             user_id=user_id,
             job_type="csv_import",
-            payload={"account_id": account_id, "skip_duplicates": skip_duplicates},
+            payload={
+                "account_id": account_id,
+                "skip_duplicates": skip_duplicates,
+                "unmapped_columns": unmapped,
+            },
         )
         asyncio.create_task(
             TransactionService.run_csv_import_job(
@@ -163,4 +170,35 @@ async def import_csv(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        raise HTTPException(status_code=500, detail="Error processing CSV file")
+
+
+@router.post("/import/preview")
+async def preview_csv(
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_db),
+):
+    """Analyze CSV to preview expenses vs earnings."""
+    service = TransactionService(session)
+    try:
+        content = await file.read()
+        csv_content = _decode_csv(content)
+        column_mapping, unmapped = service.detect_column_mapping(csv_content)
+        has_amount = any(
+            field in {"amount", "debit_amount", "credit_amount"} for field in column_mapping.values()
+        )
+        warnings = []
+        if not has_amount:
+            warnings.append("No amount column detected.")
+        if "transaction_date" not in column_mapping.values():
+            warnings.append("No date column detected.")
+
+        analysis = await service.analyze_csv(csv_content, column_mapping)
+        analysis["unmapped_columns"] = unmapped
+        analysis["detected_fields"] = sorted(set(column_mapping.values()))
+        analysis["warnings"] = warnings
+        return analysis
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
         raise HTTPException(status_code=500, detail="Error processing CSV file")

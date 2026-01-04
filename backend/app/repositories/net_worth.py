@@ -42,6 +42,19 @@ class NetWorthSnapshotRepository:
             .limit(1)
         )
         return result.scalar_one_or_none()
+
+    async def get_by_account_and_date(
+        self, account_id: int, user_id: int, snapshot_date: date
+    ) -> NetWorthSnapshot | None:
+        """Get snapshot for an account at a specific date."""
+        result = await self.session.execute(
+            select(NetWorthSnapshot).where(
+                NetWorthSnapshot.account_id == account_id,
+                NetWorthSnapshot.user_id == user_id,
+                NetWorthSnapshot.snapshot_date == snapshot_date,
+            )
+        )
+        return result.scalar_one_or_none()
     
     async def get_by_date_range(
         self, user_id: int, start_date: date, end_date: date

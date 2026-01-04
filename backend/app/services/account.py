@@ -25,11 +25,15 @@ class AccountService:
     
     async def create_account(self, user_id: int, **kwargs) -> AccountResponse:
         """Create a new account."""
+        if "account_type" in kwargs and isinstance(kwargs["account_type"], str):
+            kwargs["account_type"] = kwargs["account_type"].lower()
         account = await self.repository.create(user_id=user_id, **kwargs)
         return AccountResponse.from_orm(account)
     
     async def update_account(self, account_id: int, user_id: int, **kwargs) -> AccountResponse:
         """Update account."""
+        if "account_type" in kwargs and isinstance(kwargs["account_type"], str):
+            kwargs["account_type"] = kwargs["account_type"].lower()
         account = await self.repository.update(account_id, user_id, **kwargs)
         if not account:
             raise ValueError("Account not found")

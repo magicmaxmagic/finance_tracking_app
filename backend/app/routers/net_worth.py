@@ -39,3 +39,16 @@ async def get_net_worth_history(
         raise HTTPException(status_code=400, detail="Invalid date format (use YYYY-MM-DD)")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/snapshot")
+async def capture_net_worth_snapshot(
+    user_id: int = Depends(get_current_user_id),
+    session: AsyncSession = Depends(get_db)
+):
+    """Capture net worth snapshot for all active accounts."""
+    service = NetWorthService(session)
+    try:
+        return await service.capture_snapshot(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -46,32 +46,39 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         <div className="text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black text-white text-xs uppercase tracking-widest">
-            Finance Tracker
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-white text-xs uppercase tracking-widest">
+            Wealth OS
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold mt-6 leading-tight">
-            Turn daily spending into a clear path to wealth.
+            See every decision. Plan the path to your target net worth.
           </h1>
           <p className="text-gray-600 mt-4 text-lg">
-            Track income, expenses, and goals while exploring optimal routes to your target net worth.
+            Track income, expenses, and budgets while modeling the fastest routes to long-term wealth.
           </p>
-          <div className="mt-8 flex items-center gap-4 text-sm text-gray-500">
-            <span>Real-time insights</span>
-            <span>•</span>
-            <span>Scenario planning</span>
-            <span>•</span>
-            <span>Fast exports</span>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-600">
+            <div className="surface-muted p-3">
+              <p className="font-semibold">Clarity</p>
+              <p className="text-xs">Monthly insights in seconds.</p>
+            </div>
+            <div className="surface-muted p-3">
+              <p className="font-semibold">Control</p>
+              <p className="text-xs">Budgets that adapt to you.</p>
+            </div>
+            <div className="surface-muted p-3">
+              <p className="font-semibold">Forecast</p>
+              <p className="text-xs">Build scenarios for any horizon.</p>
+            </div>
           </div>
         </div>
 
         <div className="auth-shell rounded-3xl p-8 lg:p-10">
           <div className="mb-6">
             <h2 className="text-2xl font-bold">Sign in</h2>
-            <p className="text-gray-600 mt-2">Get back to your wealth plan in seconds.</p>
+            <p className="text-gray-600 mt-2">Welcome back. Your plan is waiting.</p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">
+            <div className="surface p-4 text-red-700 border border-red-200 bg-red-50/70 mb-4">
               {error}
             </div>
           )}
@@ -84,7 +91,7 @@ export default function LoginPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white"
+                className="input-field"
                 required
               />
             </div>
@@ -97,7 +104,7 @@ export default function LoginPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white pr-12"
+                  className="input-field pr-12"
                   minLength={8}
                   required
                 />
@@ -114,7 +121,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white font-semibold py-3 px-4 rounded-xl hover:bg-gray-900 transition disabled:opacity-50"
+              className="btn-primary w-full disabled:opacity-50"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
@@ -136,13 +143,10 @@ export default function LoginPage() {
                   placeholder="Your email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white"
+                  className="input-field"
                   required
                 />
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white font-semibold py-2 rounded-xl hover:bg-blue-700 transition"
-                >
+                <button type="submit" className="btn-secondary w-full">
                   Send reset link
                 </button>
                 {resetStatus && <p className="text-xs text-gray-500">{resetStatus}</p>}
@@ -152,7 +156,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-sm text-gray-600">
             New here?{' '}
-            <Link href="/register" className="text-blue-600 font-semibold hover:underline">
+            <Link href="/register" className="text-emerald-600 font-semibold hover:underline">
               Create an account
             </Link>
           </div>
